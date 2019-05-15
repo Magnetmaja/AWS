@@ -1,0 +1,7 @@
+#Script för att installera Nginx på en EC2 Amazon Linux 2
+
+#!/bin/bash
+yum update -y
+amazon-linux-extras install nginx1.12 -y
+systemctl start nginx
+systemctl enable nginx
