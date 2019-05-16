@@ -1,0 +1,46 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: >
+  Demo: Create an Amazon Ec2 Instance.
+
+Resources:
+
+  # Ec2 server
+  Ec2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-030dbca661d402413
+      InstanceType: t2.micro
+      KeyName: MyLoginKey
+      Tags: 
+        - 
+          Key: "Name"
+          Value: "LAB-SRV1"
+      SecurityGroupIds:
+        - !Ref WebSecuritygroup
+        - !Ref SSHSecuritygroup
+
+  # SecurityGroup    
+  WebSecuritygroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupDescription: MyWebSecGroup
+      GroupName: MyWebSecGroup
+      SecurityGroupIngress: 
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+
+  # SecurityGroup    
+  SSHSecuritygroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupDescription: MySSHSecGroup
+      GroupName: MySSHSecGroup
+      SecurityGroupIngress: 
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: 0.0.0.0/0
