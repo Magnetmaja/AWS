@@ -1,0 +1,138 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: >
+  Demo: Create an Amazon Ec2 Instance.
+
+Resources:
+
+  # # Ec2 server
+  # Ec2Instance:
+  #   Type: AWS::EC2::Instance
+  #   Properties:
+  #     ImageId: ami-030dbca661d402413
+  #     InstanceType: t2.micro
+  #     KeyName: MyLoginKey
+  #     Tags: 
+  #       - 
+  #         Key: "Name"
+  #         Value: "LAB-SRV1"
+  #     SecurityGroupIds:
+  #       - !Ref WebSecuritygroup
+  #       - !Ref SSHSecuritygroup
+  #     UserData:
+  #       Fn::Base64: !Sub |
+  #         #!/bin/bash
+  #         yum update -y
+  #         amazon-linux-extras install nginx1.12 -y
+  #         systemctl start nginx
+  #         systemctl enable nginx
+  #         sed -i -e "0,/nginx/s/nginx/MyNameIsAnsofy/" /usr/share/nginx/html/index.html
+
+  # Create your own LaunchTemplate with nginx Amazon Linux 2
+  LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties: 
+      LaunchTemplateData:
+        ImageId: ami-030dbca661d402413
+        InstanceType: t2.micro
+        KeyName: MyLoginKey
+        SecurityGroupIds:
+          - !GetAtt WebSecuritygroup.GroupId # Get groupname and convert to id
+          - !GetAtt SSHSecuritygroup.GroupId
+        UserData: # Make your own touch from start
+          Fn::Base64: !Sub |
+            #!/bin/bash
+            yum update -y
+            amazon-linux-extras install nginx1.12 -y
+            systemctl start nginx
+            systemctl enable nginx
+            sed -i -e "0,/nginx/s/nginx/MyNameIsAnsofy/" /usr/share/nginx/html/index.html
+      LaunchTemplateName: NginxLT
+
+  # My auto-scaling group
+  MyAutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties: 
+      AutoScalingGroupName: MyASG
+      HealthCheckGracePeriod: 300
+      LaunchTemplate:
+        LaunchTemplateId: !Ref LaunchTemplate # Get the LaunchTemplate info
+        Version: 1
+      MinSize: 1
+      MaxSize: 3
+      Tags: 
+        - 
+          ResourceType: "auto-scaling-group"
+          Key: "Name"
+          Value: "MyASG-Nginx"
+          PropagateAtLaunch: true
+          ResourceId: "MyASG"
+      TargetGroupARNs: 
+        - !Ref TargetGroup
+      VPCZoneIdentifier: 
+        - "subnet-e559e8bf"
+        - "subnet-b77f08d1"
+        - "subnet-8ce8afc4"
+
+  # ALB
+  AppLoadBalancer:
+    Type: "AWS::ElasticLoadBalancingV2::LoadBalancer"
+    Properties:
+      Name: "MyLB"
+      Scheme: "internet-facing"
+      SecurityGroups: 
+        - !GetAtt WebSecuritygroup.GroupId
+        - !GetAtt SSHSecuritygroup.GroupId
+      Subnets: 
+        - "subnet-8ce8afc4"
+        - "subnet-e559e8bf"
+        - "subnet-b77f08d1"
+      Tags: []
+      IpAddressType: "ipv4"
+      Type: "application"
+
+  # Create a Target Group
+  TargetGroup:
+    Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
+    Properties:
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: "/"
+      HealthCheckProtocol: "HTTP"
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 5
+      Matcher: 
+        HttpCode: "200"
+      Name: "MyTG"
+      Port: 80
+      Protocol: "HTTP"
+      TargetType: "instance"
+      UnhealthyThresholdCount: 2
+      VpcId: "vpc-7fc1fb19"
+
+
+  # SecurityGroup    
+  WebSecuritygroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupDescription: MyWebSecGroup
+      GroupName: MyWebSecGroup
+      SecurityGroupIngress: 
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+
+  # SecurityGroup    
+  SSHSecuritygroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupDescription: MySSHSecGroup
+      GroupName: MySSHSecGroup
+      SecurityGroupIngress: 
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: 0.0.0.0/0
+  
+  
