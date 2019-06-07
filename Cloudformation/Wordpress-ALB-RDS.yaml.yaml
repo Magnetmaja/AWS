@@ -1,15 +1,19 @@
 AWSTemplateFormatVersion: 2010-09-09
+# Dont forget to update wordpressuser and wordpresspassword to your own, take a look in the userdata and update it on 
+# both WordpressInstance and LaunchConfig and also in the RDS.
+
 Description: >-
-  MyWordpress
+  MyWordpress.
 Parameters:
   VpcId:
     Description: My VpcId.
     Type: 'AWS::EC2::VPC::Id'
     Default: vpc-7fc1fb19
 
+  # Edit your env name
   EnvironmentName:
     Description: Enter Environment Name. NO CAPS
-    Default: magnetmaja
+    Default: lab
     Type: String
     AllowedPattern: '[a-z0-9]*$'
     
@@ -259,7 +263,7 @@ Resources:
           mv wp-cli.phar /usr/local/bin/wp
           cd /var/www/html
           EC2HOSTNAME=`curl http://169.254.169.254/latest/meta-data/public-hostname`
-          wp core install --url=$EC2HOSTNAME --title=MagnetmajasWordpress --admin_user=wordpressuser --admin_password=wordpresspassword --admin_email=wordpress@magnetmaja.se
+          wp core install --url=$EC2HOSTNAME --title=YourWPtitle --admin_user=wordpressuser --admin_password=wordpresspassword --admin_email=wordpress@yourmailadress.com
           wp theme activate twentyseventeen
 
   # WP-ASG
@@ -349,7 +353,7 @@ Resources:
           mv wp-cli.phar /usr/local/bin/wp
           cd /var/www/html
           EC2HOSTNAME=`curl http://169.254.169.254/latest/meta-data/public-hostname`
-          wp core install --url=$EC2HOSTNAME --title=MagnetmajaWordpress --admin_user=wordpressuser --admin_password=wordpresspassword --admin_email=wordpress@magnetmaja.se
+          wp core install --url=$EC2HOSTNAME --title=YourWPtitle --admin_user=wordpressuser --admin_password=wordpresspassword --admin_email=wordpress@yourmailadress.com
           wp theme activate twentyseventeen
 
   # WEB SG
