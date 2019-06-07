@@ -96,7 +96,6 @@ Resources:
       PubliclyAccessible: false
       LicenseModel: general-public-license
       StorageType: GP2
-      AllocatedStorage: 20
       BackupRetentionPeriod: 7
       VPCSecurityGroups:
         - Ref: DBSecurityGroup
